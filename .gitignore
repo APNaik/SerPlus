@@ -45,5 +45,19 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+# Build directories
 build/
-vcpkg_installed
+vcpkg_installed/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
