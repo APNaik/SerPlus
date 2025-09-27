@@ -207,7 +207,7 @@ HttpRequest HttpRequest::parse(const std::string &objString){
                 req.url.port = static_cast<uint16_t>(p);
                 req.url.hasPort = true;
             } catch(...) { req.url.hasPort = false; }
-        } 
+        }
         else {
             req.url.host = hostHeader;
         }

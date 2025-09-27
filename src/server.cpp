@@ -15,11 +15,8 @@
     #include <arpa/inet.h>
     #include <unistd.h>
 #endif
+#include "http_request.hpp"
 
-class RequestParser{
-public:
-	std::string url_extrac();
-};
 
 int main(int argc, char **argv){
 	// Flush after every std::cout / std::cerr
@@ -78,7 +75,52 @@ int main(int argc, char **argv){
 			continue;
 		}
 		std::cout << "client connected\n";
-		send(client_socket, "HTTP/1.1 200 OK\r\n\r\n", 20, 0);
+		char buffer[4096];
+		int bytes_received;
+		std::string req_data;
+		while ((bytes_received = recv(client_socket, buffer, sizeof(buffer), 0)) > 0) {
+			req_data.append(buffer, bytes_received);
+
+			// Look for end of headers (\r\n\r\n)
+			size_t header_end = req_data.find("\r\n\r\n");
+			if (header_end != std::string::npos) {
+				// Extract headers
+				std::string headers_part = req_data.substr(0, header_end + 4);
+
+				// Look for Content-Length
+				size_t cont_len_pos = headers_part.find("Content-Length:");
+				if (cont_len_pos != std::string::npos) {
+					// Extract the number
+					size_t line_end = headers_part.find("\r\n", cont_len_pos);
+					std::string len_str = headers_part.substr(cont_len_pos + 15, line_end - (cont_len_pos + 15));
+					int cont_len = std::stoi(len_str);
+
+					// Total needed = headers + body
+					size_t total_needed = header_end + 4 + cont_len;
+					if (req_data.size() >= total_needed) {
+						break;  // got the full request
+					}
+				} 
+				else {
+					break; // no body
+				}
+			}
+		}
+
+		HttpRequest request = HttpRequest::parse(req_data);
+		std::string body;
+		body += "Method: " + http_method_to_str(request.method) + "\n";
+		body += "Path: " + request.url.path + "\n";
+		body += "HTTP version: " + request.http_version + "\n";
+		body += "Headers:\n";
+		for(auto h: request.headers){
+			body += " " + h.first + ": " + h.second + "\n";
+		}
+		body += "Body:\n";
+		body += request.getBodyString();
+
+		std::cout << "--Entire content of the http request--\n";
+		std::cout << body << std::endl;
 #ifdef _WIN32
 		closesocket(client_socket);
 #else

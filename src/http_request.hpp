@@ -1,5 +1,6 @@
 #ifndef HTTP_REQUEST_HPP
 #define HTTP_REQUEST_HPP
+#undef DELETE
 
 #include <string>
 #include <map>
