@@ -16,7 +16,7 @@
     #include <unistd.h>
 #endif
 #include "http_request.hpp"
-
+#include "http_response.hpp"
 
 int main(int argc, char **argv){
 	// Flush after every std::cout / std::cerr
@@ -121,6 +121,16 @@ int main(int argc, char **argv){
 
 		std::cout << "--Entire content of the http request--\n";
 		std::cout << body << std::endl;
+
+		HttpResponse response(HttpResponse::OK);
+		
+		// Set the headers from request
+		response.setHeader("Content-Type", "text/plain");
+		response.setHeader("Connection", "close");
+		response.setBody(request.getBodyString());
+		std::string resString = response.toString();
+		size_t len_res = resString.size();
+		send(client_socket, resString.c_str(), len_res, 0);
 #ifdef _WIN32
 		closesocket(client_socket);
 #else
